@@ -621,7 +621,8 @@ function drawNetwork(network: nn.Node[][]): void {
             (link.source.id !== idWithCallout || numLayers <= 5) &&
             link.dest.id !== idWithCallout &&
             prevLayer.length >= numNodes) {
-          let midPoint: DOMPoint = path.getPointAtLength(path.getTotalLength() * 0.7);
+          // midPoint:DOMPoint https://developer.mozilla.org/docs/Web/API/DOMPoin
+          let midPoint = path.getPointAtLength(path.getTotalLength() * 0.7);
           calloutWeights.style({
             display: null,
             top: `${midPoint.y + 5}px`,
