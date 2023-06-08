@@ -79,7 +79,7 @@ export class AppendingLineChart {
     this.maxY = Number.MIN_VALUE;
   }
 
-  addDataPoint(dataPoint: number[]) {
+  addDataPoint(dataPoint: number[]): void {
     if (dataPoint.length !== this.numLines) {
       throw Error("Length of dataPoint must equal number of lines");
     }
@@ -92,7 +92,7 @@ export class AppendingLineChart {
     this.redraw();
   }
 
-  private redraw() {
+  private redraw(): void {
     // Adjust the x and y domain.
     this.xScale.domain([1, this.data.length]);
     this.yScale.domain([this.minY, this.maxY]);

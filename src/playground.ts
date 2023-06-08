@@ -29,7 +29,7 @@ import {Example2D, shuffle} from "./dataset";
 import {AppendingLineChart} from "./linechart";
 import * as d3 from 'd3';
 
-let mainWidth;
+let mainWidth: number;
 
 // More scrolling
 d3.select(".more button").on("click", function() {
@@ -400,7 +400,7 @@ function updateBiasesUI(network: nn.Node[][]) {
   });
 }
 
-function updateWeightsUI(network: nn.Node[][], container) {
+function updateWeightsUI(network: nn.Node[][], container: d3.Selection<any>): void {
   for (let layerIdx = 1; layerIdx < network.length; layerIdx++) {
     let currentLayer = network[layerIdx];
     // Update all the nodes in this layer.
@@ -421,7 +421,7 @@ function updateWeightsUI(network: nn.Node[][], container) {
 }
 
 function drawNode(cx: number, cy: number, nodeId: string, isInput: boolean,
-    container, node?: nn.Node) {
+    container: d3.Selection<any>, node?: nn.Node): void {
   let x = cx - RECT_SIZE / 2;
   let y = cy - RECT_SIZE / 2;
 
@@ -451,10 +451,12 @@ function drawNode(cx: number, cy: number, nodeId: string, isInput: boolean,
       y: RECT_SIZE / 2, "text-anchor": "end"
     });
     if (/[_^]/.test(label)) {
-      let myRe = /(.*?)([_^])(.)/g;
-      let myArray;
-      let lastIndex;
+      let myRe: RegExp = /(.*?)([_^])(.)/g;
+      let myArray:any[];
+      let lastIndex: number;
       while ((myArray = myRe.exec(label)) != null) {
+        //The lastIndex data property of a RegExp instance 
+        //specifies the index at which to start the next match.
         lastIndex = myRe.lastIndex;
         let prefix = myArray[1];
         let sep = myArray[2];
@@ -492,7 +494,7 @@ function drawNode(cx: number, cy: number, nodeId: string, isInput: boolean,
   }
 
   // Draw the node's canvas.
-  let div = d3.select("#network").insert("div", ":first-child")
+  let div: d3.Selection<any> = d3.select("#network").insert("div", ":first-child")
     .attr({
       "id": `canvas-${nodeId}`,
       "class": "canvas"
@@ -544,35 +546,35 @@ function drawNetwork(network: nn.Node[][]): void {
   d3.select("#network").selectAll("div.plus-minus-neurons").remove();
 
   // Get the width of the svg container.
-  let padding = 3;
-  let co = d3.select(".column.output").node() as HTMLDivElement;
-  let cf = d3.select(".column.features").node() as HTMLDivElement;
-  let width = co.offsetLeft - cf.offsetLeft;
+  let padding: number = 3;
+  let co: HTMLDivElement = d3.select(".column.output").node() as HTMLDivElement;
+  let cf: HTMLDivElement = d3.select(".column.features").node() as HTMLDivElement;
+  let width: number = co.offsetLeft - cf.offsetLeft;
   svg.attr("width", width);
 
   // Map of all node coordinates.
   let node2coord: {[id: string]: {cx: number, cy: number}} = {};
-  let container = svg.append("g")
+  let container: d3.Selection<any> = svg.append("g")
     .classed("core", true)
     .attr("transform", `translate(${padding},${padding})`);
   // Draw the network layer by layer.
-  let numLayers = network.length;
-  let featureWidth = 118;
-  let layerScale = d3.scale.ordinal<number, number>()
+  let numLayers: number = network.length;
+  let featureWidth: number = 118;
+  let layerScale: d3.scale.Ordinal<number, number> = d3.scale.ordinal<number, number>()
       .domain(d3.range(1, numLayers - 1))
       .rangePoints([featureWidth, width - RECT_SIZE], 0.7);
   let nodeIndexScale = (nodeIndex: number) => nodeIndex * (RECT_SIZE + 25);
 
 
-  let calloutThumb = d3.select(".callout.thumbnail").style("display", "none");
-  let calloutWeights = d3.select(".callout.weights").style("display", "none");
+  let calloutThumb: d3.Selection<any> = d3.select(".callout.thumbnail").style("display", "none");
+  let calloutWeights: d3.Selection<any> = d3.select(".callout.weights").style("display", "none");
   let idWithCallout = null;
   let targetIdWithCallout = null;
 
   // Draw the input layer separately.
-  let cx = RECT_SIZE / 2 + 50;
+  let cx: number = RECT_SIZE / 2 + 50;
   let nodeIds = Object.keys(INPUTS);
-  let maxY = nodeIndexScale(nodeIds.length);
+  let maxY: number = nodeIndexScale(nodeIds.length);
   nodeIds.forEach((nodeId, i) => {
     let cy = nodeIndexScale(i) + RECT_SIZE / 2;
     node2coord[nodeId] = {cx, cy};
@@ -581,19 +583,19 @@ function drawNetwork(network: nn.Node[][]): void {
 
   // Draw the intermediate layers.
   for (let layerIdx = 1; layerIdx < numLayers - 1; layerIdx++) {
-    let numNodes = network[layerIdx].length;
-    let cx = layerScale(layerIdx) + RECT_SIZE / 2;
+    let numNodes: number = network[layerIdx].length;
+    let cx: number = layerScale(layerIdx) + RECT_SIZE / 2;
     maxY = Math.max(maxY, nodeIndexScale(numNodes));
     addPlusMinusControl(layerScale(layerIdx), layerIdx);
     for (let i = 0; i < numNodes; i++) {
-      let node = network[layerIdx][i];
-      let cy = nodeIndexScale(i) + RECT_SIZE / 2;
+      let node: nn.Node = network[layerIdx][i];
+      let cy: number = nodeIndexScale(i) + RECT_SIZE / 2;
       node2coord[node.id] = {cx, cy};
       drawNode(cx, cy, node.id, false, container, node);
 
       // Show callout to thumbnails.
-      let numNodes = network[layerIdx].length;
-      let nextNumNodes = network[layerIdx + 1].length;
+      let numNodes: number = network[layerIdx].length;
+      let nextNumNodes: number = network[layerIdx + 1].length;
       if (idWithCallout == null &&
           i === numNodes - 1 &&
           nextNumNodes <= numNodes) {
@@ -607,19 +609,19 @@ function drawNetwork(network: nn.Node[][]): void {
 
       // Draw links.
       for (let j = 0; j < node.inputLinks.length; j++) {
-        let link = node.inputLinks[j];
+        let link: nn.Link = node.inputLinks[j];
         let path: SVGPathElement = drawLink(link, node2coord, network,
             container, j === 0, j, node.inputLinks.length).node() as any;
         // Show callout to weights.
-        let prevLayer = network[layerIdx - 1];
-        let lastNodePrevLayer = prevLayer[prevLayer.length - 1];
+        let prevLayer: nn.Node[] = network[layerIdx - 1];
+        let lastNodePrevLayer: nn.Node = prevLayer[prevLayer.length - 1];
         if (targetIdWithCallout == null &&
             i === numNodes - 1 &&
             link.source.id === lastNodePrevLayer.id &&
             (link.source.id !== idWithCallout || numLayers <= 5) &&
             link.dest.id !== idWithCallout &&
             prevLayer.length >= numNodes) {
-          let midPoint = path.getPointAtLength(path.getTotalLength() * 0.7);
+          let midPoint: DOMPoint = path.getPointAtLength(path.getTotalLength() * 0.7);
           calloutWeights.style({
             display: null,
             top: `${midPoint.y + 5}px`,
@@ -654,18 +656,18 @@ function drawNetwork(network: nn.Node[][]): void {
   d3.select(".column.features").style("height", height + "px");
 }
 
-function getRelativeHeight(selection) {
-  let node = selection.node() as HTMLAnchorElement;
+function getRelativeHeight(selection): number {
+  let node: HTMLAnchorElement = selection.node() as HTMLAnchorElement;
   return node.offsetHeight + node.offsetTop;
 }
 
-function addPlusMinusControl(x: number, layerIdx: number) {
-  let div = d3.select("#network").append("div")
+function addPlusMinusControl(x: number, layerIdx: number): void {
+  let div: d3.Selection<any> = d3.select("#network").append("div")
     .classed("plus-minus-neurons", true)
     .style("left", `${x - 10}px`);
 
-  let i = layerIdx - 1;
-  let firstRow = div.append("div").attr("class", `ui-numNodes${layerIdx}`);
+  let i: number = layerIdx - 1;
+  let firstRow: d3.Selection<any> = div.append("div").attr("class", `ui-numNodes${layerIdx}`);
   firstRow.append("button")
       .attr("class", "mdl-button mdl-js-button mdl-button--icon")
       .on("click", () => {
@@ -703,8 +705,8 @@ function addPlusMinusControl(x: number, layerIdx: number) {
 }
 
 function updateHoverCard(type: HoverType, nodeOrLink?: nn.Node | nn.Link,
-    coordinates?: [number, number]) {
-  let hovercard = d3.select("#hovercard");
+    coordinates?: [number, number]): void {
+  let hovercard: d3.Selection<any> = d3.select("#hovercard");
   if (type == null) {
     hovercard.style("display", "none");
     d3.select("#svg").on("click", null);
@@ -731,10 +733,10 @@ function updateHoverCard(type: HoverType, nodeOrLink?: nn.Node | nn.Link,
     });
     (input.node() as HTMLInputElement).focus();
   });
-  let value = (type === HoverType.WEIGHT) ?
+  let value: number = (type === HoverType.WEIGHT) ?
     (nodeOrLink as nn.Link).weight :
     (nodeOrLink as nn.Node).bias;
-  let name = (type === HoverType.WEIGHT) ? "Weight" : "Bias";
+  let name: string = (type === HoverType.WEIGHT) ? "Weight" : "Bias";
   hovercard.style({
     "left": `${coordinates[0] + 20}px`,
     "top": `${coordinates[1]}px`,
@@ -751,12 +753,12 @@ function updateHoverCard(type: HoverType, nodeOrLink?: nn.Node | nn.Link,
 
 function drawLink(
     input: nn.Link, node2coord: {[id: string]: {cx: number, cy: number}},
-    network: nn.Node[][], container,
-    isFirst: boolean, index: number, length: number) {
-  let line = container.insert("path", ":first-child");
-  let source = node2coord[input.source.id];
-  let dest = node2coord[input.dest.id];
-  let datum = {
+    network: nn.Node[][], container: d3.Selection<any>,
+    isFirst: boolean, index: number, length: number): any {
+  let line: d3.Selection<any> = container.insert("path", ":first-child");
+  let source: {cx: number,cy: number} = node2coord[input.source.id];
+  let dest : {cx: number,cy: number}= node2coord[input.dest.id];
+  let datum: {source: {y: number,x: number},target: {y: number,x: number}} = {
     source: {
       y: source.cx + RECT_SIZE / 2 + 2,
       x: source.cy
@@ -766,7 +768,7 @@ function drawLink(
       x: dest.cy + ((index - (length - 1) / 2) / length) * 12
     }
   };
-  let diagonal = d3.svg.diagonal().projection(d => [d.y, d.x]);
+  let diagonal: d3.svg.Diagonal<d3.svg.diagonal.Link<d3.svg.diagonal.Node>, d3.svg.diagonal.Node> = d3.svg.diagonal().projection(d => [d.y, d.x]);
   line.attr({
     "marker-start": "url(#markerArrow)",
     class: "link",
@@ -804,8 +806,8 @@ function updateDecisionBoundary(network: nn.Node[][], firstTime: boolean) {
       boundary[nodeId] = new Array(DENSITY);
     }
   }
-  let xScale = d3.scale.linear().domain([0, DENSITY - 1]).range(xDomain);
-  let yScale = d3.scale.linear().domain([DENSITY - 1, 0]).range(xDomain);
+  let xScale: d3.scale.Linear<number, number> = d3.scale.linear().domain([0, DENSITY - 1]).range(xDomain);
+  let yScale: d3.scale.Linear<number, number> = d3.scale.linear().domain([DENSITY - 1, 0]).range(xDomain);
 
   let i = 0, j = 0;
   for (i = 0; i < DENSITY; i++) {
@@ -838,24 +840,24 @@ function updateDecisionBoundary(network: nn.Node[][], firstTime: boolean) {
 }
 
 function getLoss(network: nn.Node[][], dataPoints: Example2D[]): number {
-  let loss = 0;
+  let loss: number = 0;
   for (let i = 0; i < dataPoints.length; i++) {
-    let dataPoint = dataPoints[i];
-    let input = constructInput(dataPoint.x, dataPoint.y);
-    let output = nn.forwardProp(network, input);
+    let dataPoint: Example2D = dataPoints[i];
+    let input: number[] = constructInput(dataPoint.x, dataPoint.y);
+    let output: number = nn.forwardProp(network, input);
     loss += nn.Errors.SQUARE.error(output, dataPoint.label);
   }
   return loss / dataPoints.length;
 }
 
-function updateUI(firstStep = false) {
+function updateUI(firstStep = false): void {
   // Update the links visually.
   updateWeightsUI(network, d3.select("g.core"));
   // Update the bias values visually.
   updateBiasesUI(network);
   // Get the decision boundary of the network.
   updateDecisionBoundary(network, firstStep);
-  let selectedId = selectedNodeId != null ?
+  let selectedId: string = selectedNodeId != null ?
       selectedNodeId : nn.getOutputNode(network).id;
   heatMap.updateBackground(boundary[selectedId], state.discretize);
 
@@ -867,7 +869,7 @@ function updateUI(firstStep = false) {
   });
 
   function zeroPad(n: number): string {
-    let pad = "000000";
+    let pad: string = "000000";
     return (pad + n).slice(-pad.length);
   }
 
@@ -937,7 +939,7 @@ export function getOutputWeights(network: nn.Node[][]): number[] {
   return weights;
 }
 
-function reset(onStartup=false) {
+function reset(onStartup=false): void {
   lineChart.reset();
   state.serialize();
   if (!onStartup) {
@@ -963,7 +965,7 @@ function reset(onStartup=false) {
   updateUI(true);
 };
 
-function initTutorial() {
+function initTutorial(): void {
   if (state.tutorial == null || state.tutorial === '' || state.hideText) {
     return;
   }
@@ -978,7 +980,7 @@ function initTutorial() {
     }
     tutorial.node().appendChild(htmlFragment);
     // If the tutorial has a <title> tag, set the page title to that.
-    let title = tutorial.select("title");
+    let title: d3.Selection<any> = tutorial.select("title");
     if (title.size()) {
       d3.select("header h1").style({
         "margin-top": "20px",
@@ -990,7 +992,7 @@ function initTutorial() {
   });
 }
 
-function drawDatasetThumbnails() {
+function drawDatasetThumbnails(): void {
   function renderThumbnail(canvas, dataGenerator) {
     let w = 100;
     let h = 100;
@@ -1024,7 +1026,7 @@ function drawDatasetThumbnails() {
   }
 }
 
-function hideControls() {
+function hideControls(): void {
   // Set display:none to all the UI elements that are hidden.
   let hiddenProps = state.getHiddenProps();
   hiddenProps.forEach(prop => {
@@ -1064,7 +1066,7 @@ function hideControls() {
     .attr("href", window.location.href);
 }
 
-function generateData(firstTime = false) {
+function generateData(firstTime = false): void {
   if (!firstTime) {
     // Change the seed.
     state.seed = Math.random().toFixed(5);
@@ -1090,7 +1092,7 @@ function generateData(firstTime = false) {
 let firstInteraction = true;
 let parametersChanged = false;
 
-function userHasInteracted() {
+function userHasInteracted(): void {
   if (!firstInteraction) {
     return;
   }
@@ -1103,7 +1105,7 @@ function userHasInteracted() {
   ga('send', 'pageview', {'sessionControl': 'start'});
 }
 
-function simulationStarted() {
+function simulationStarted(): void {
   ga('send', {
     hitType: 'event',
     eventCategory: 'Starting Simulation',
